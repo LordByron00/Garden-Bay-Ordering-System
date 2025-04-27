@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Image, FlatList, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-
+import PaymentPopup from '../components/payment';
 
 const { width, height } = Dimensions.get('window');
 const CARD_SIZE = (width * 0.72) / 3; // Optimized card size
@@ -34,6 +34,13 @@ export default function MenuScreen() {
   const [activeCategory, setActiveCategory] = useState('1');
   const [orderItems, setOrderItems] = useState([]);
   const [showOrderPanel, setShowOrderPanel] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [total, setTotal] = useState(0);
+
+  useEffect(() => {
+    const newTotal = orderItems.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    setTotal(newTotal);
+  }, [orderItems]); // This will auto-update when orderItems changes
 
   const handleAddToOrder = (item) => {
     setOrderItems(prev => {
@@ -60,8 +67,26 @@ export default function MenuScreen() {
     setOrderItems(prev => prev.filter(item => item.id !== itemId));
   };
 
+  const cancelItem = () => {
+    setOrderItems(prev => []);
+    setShowOrderPanel(false);
+  }
+
+  const handleSuccessfulPayment = () => {
+    cancelItem(); // Clear the orders list
+  };
+
   return (
     <View style={styles.container}>
+
+        <PaymentPopup
+          visible={showPayment}
+          onClose={() => setShowPayment(false)}
+          totalAmount={total}
+          orderItems ={orderItems}
+          onPaymentSuccess = {handleSuccessfulPayment}
+        />
+
       {/* Left Panel - Enhanced Categories */}
       <View style={styles.leftPanel}>
         <Text style={styles.panelTitle}>Categories</Text>
@@ -108,7 +133,9 @@ export default function MenuScreen() {
               </View>
               <TouchableOpacity 
                 style={styles.addButton}
-                onPress={() => handleAddToOrder(item)}
+                onPress={() => {
+                  handleAddToOrder(item);
+                }}
               >
                 <Text style={styles.addButtonText}>+</Text>
               </TouchableOpacity>
@@ -121,19 +148,24 @@ export default function MenuScreen() {
       {showOrderPanel && (
         <View style={styles.orderPanel}>
           <ScrollView contentContainerStyle={styles.orderContent}>
-          <TouchableOpacity 
-            // style={styles.quantityButton}
-            onPress={() =>  setShowOrderPanel(false)}
-          >
-            <Text style={styles.deleteText}>≡</Text>
-          </TouchableOpacity>
+
+          <View style={styles.curOrderHeader}>
+            <TouchableOpacity 
+                style={styles.menuButton}
+                onPress={() =>  setShowOrderPanel(false)}
+              >
+              <Icon name="bars" size={33} color="black."/>
+            </TouchableOpacity>
+
+            <Text style={styles.orderTitle}>Cart</Text>
+          </View>
           
-            <Text style={styles.orderTitle}>Current Order</Text>
             
             {orderItems.map((item) => (
               <View key={item.id} style={styles.orderItem}>
                 <Image source={item.image} style={styles.orderImage} />
                 
+                {/* Order details */}
                 <View style={styles.orderInfo}>
                   <Text style={styles.orderName}>{item.name}</Text>
                   <Text style={styles.orderPrice}>${item.price.toFixed(2)}</Text>
@@ -162,7 +194,7 @@ export default function MenuScreen() {
                     style={styles.deleteButton}
                     onPress={() => removeItem(item.id)}
                   >
-                    <Text style={styles.deleteText}>x</Text>
+                    <Icon name="trash-o" size={27} color="#b3071b" />
                   </TouchableOpacity>
                   <Text style={styles.orderPrice}>${(item.price * item.qty).toFixed(2)}</Text>
                 </View>
@@ -170,16 +202,29 @@ export default function MenuScreen() {
             ))}
           </ScrollView>
 
+          {/* Total container  */}
           <View style={styles.totalContainer}>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Total:</Text>
               <Text style={styles.totalAmount}>
-                ${orderItems.reduce((sum, item) => sum + (item.price * item.qty), 0).toFixed(2)}
+                ${total}
               </Text>
             </View>
-            <TouchableOpacity style={styles.checkoutButton}>
-              <Text style={styles.checkoutText}>Confirm Order</Text>
-            </TouchableOpacity>
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity style={styles.cancelButton}
+                  onPress={() => cancelItem()}
+                >
+                <Text style={styles.checkoutText}>Cancel Order</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.checkoutButton}
+                  onPress={() => setShowPayment(true)}
+                >
+                  <Text style={styles.checkoutText}>Confirm Order</Text>
+                </TouchableOpacity>
+
+              </View>
+    
           </View>
         </View>
       )}
@@ -190,10 +235,12 @@ export default function MenuScreen() {
           style={styles.cartButton}
           onPress={() => setShowOrderPanel(true)}
         >
-          <Text style={styles.cartText}>🛒 {orderItems.reduce((sum, item) => sum + item.qty, 0)}</Text>
           <Icon name="shopping-cart" size={30} color="#040f04" />
+          <Text style={styles.cartText}>{orderItems.reduce((sum, item) => sum + item.qty, 0)}</Text>
         </TouchableOpacity>
       )}
+
+      
     </View>
   );
 }
@@ -318,12 +365,17 @@ const styles = StyleSheet.create({
     width: width * 0.27,
     justifyContent: 'space-between',
   },
+  curOrderHeader: {
+    flexDirection: 'row',
+    // backgroundColor: '#7d868c',
+    alignContent: 'center',
+  },
   orderTitle: {
     fontSize: 32,
     fontWeight: 'bold',
     color: '#2C3E50',
-    margin: 25,
-    marginBottom: 30,
+    marginLeft: 160,
+    marginBottom: 15,
   },
   orderItem: {
     flexDirection: 'row',
@@ -359,6 +411,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 15,
   },
+  menuButton: {
+    marginLeft: 5,
+    marginTop: 3,
+  },
   quantityButton: {
     backgroundColor: '#4CAF50',
     width: 32,
@@ -393,6 +449,11 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#E0E0E0',
   },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 25,
+  },
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -408,11 +469,19 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#4CAF50',
   },
+  cancelButton: {
+    backgroundColor: '#b30b0b',
+    borderRadius: 15,
+    padding: 20,
+    alignItems: 'center',
+    width: 220
+  },
   checkoutButton: {
     backgroundColor: '#4CAF50',
     borderRadius: 15,
     padding: 20,
     alignItems: 'center',
+    width: 220,
   },
   checkoutText: {
     color: '#FFFFFF',
