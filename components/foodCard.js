@@ -85,7 +85,7 @@ const FoodCard = ({ item, onPress }) => {
       <View style={styles.foodInfo}>
         <Text style={styles.foodName}>{item.name}</Text>
         <Text style={styles.foodDescription}>{item.description}</Text>
-        <Text style={styles.foodPrice}>${item.price.toFixed(2)}</Text>
+        <Text style={styles.foodPrice}>₱{item.price.toFixed(2)}</Text>
       </View>
       <TouchableOpacity style={styles.addButton}>
         <Text style={styles.addButtonText}>+</Text>

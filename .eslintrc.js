@@ -1,4 +1,4 @@
 module.exports = {
   root: true,
-  extends: '@react-native',
+  extextends: ["react-app", "react-app/jest"],
 };

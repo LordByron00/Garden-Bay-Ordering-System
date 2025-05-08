@@ -2,62 +2,176 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Image, FlatList, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import PaymentPopup from '../components/payment';
+import axios from 'axios';
+import CookieManager from '@react-native-cookies/cookies';
+
+
+
 
 const { width, height } = Dimensions.get('window');
 const CARD_SIZE = (width * 0.72) / 3; // Optimized card size
 
 // Temporary Data
 const categories = [
-  { id: '1', name: 'Main Dishes', icon: '🍲' },
-  { id: '2', name: 'Appetizers', icon: '🥗' },
-  { id: '3', name: 'Drinks', icon: '🥤' },
-  { id: '4', name: 'Desserts', icon: '🍰' },
+  { id: 'main', name: 'Main Dishes', icon: '🍲' },
+  { id: 'side', name: 'Appetizers', icon: '🥗' },
+  { id: 'drinks', name: 'Drinks', icon: '🥤' },
+  { id: 'dessert', name: 'Desserts', icon: '🍰' },
 ];
 
 const foodItems = [
   { id: '1', name: 'Grilled Salmon', price: 18.99, category: '1', image: require('../assets/salmon.jpg') },
-  { id: '2', name: 'Beef Steak', price: 24.99, category: '1', image: require('../assets/steak.jpg') },
-  { id: '3', name: 'Caesar Salad', price: 12.99, category: '2', image: require('../assets/salad.jpg') },
-  { id: '4', name: 'Grilled Salmon', price: 18.99, category: '1', image: require('../assets/salmon.jpg') },
-  { id: '5', name: 'Beef Steak', price: 24.99, category: '2', image: require('../assets/steak.jpg') },
-  { id: '6', name: 'Caesar Salad', price: 12.99, category: '3', image: require('../assets/salad.jpg') },
-  { id: '7', name: 'Grilled Salmon', price: 18.99, category: '3', image: require('../assets/salmon.jpg') },
-  { id: '8', name: 'Beef Steak', price: 24.99, category: '3', image: require('../assets/steak.jpg') },
-  { id: '9', name: 'Caesar Salad', price: 12.99, category: '4', image: require('../assets/salad.jpg') },
-  { id: '10', name: 'Grilled Salmon', price: 18.99, category: '4', image: require('../assets/salmon.jpg') },
-  { id: '11', name: 'Beef Steak', price: 24.99, category: '4', image: require('../assets/steak.jpg') },
-  { id: '12', name: 'Caesar Salad', price: 12.99, category: '3', image: require('../assets/salad.jpg') },
+  { id: '2', name: 'Truffle mushroom Pasta', price: 24.99, category: '1', image: require('../assets/truffle.jpg') },
+  { id: '4', name: 'Shrimp Shrimp Pasta', price: 18.99, category: '1', image: require('../assets/peto-shrimp.jpg') },
+  { id: '3', name: 'Chicken Adobo', price: 12.99, category: '2', image: require('../assets/chickenAdobo.jpg') },
+  { id: '5', name: 'Beef Steak', price: 24.99, category: '2', image: require('../assets/steak.png') },
+  { id: '13', name: 'Arroz Caldo', price: 24.99, category: '2', image: require('../assets/Arroz-Caldo-with-Chicken.jpg') },
+  { id: '6', name: 'San Miguel', price: 12.99, category: '3', image: require('../assets/sanmiguel.jpg') },
+  { id: '7', name: 'Heineken', price: 18.99, category: '3', image: require('../assets/Heineken.jpg') },
+  { id: '8', name: 'Asahi ', price: 24.99, category: '3', image: require('../assets/Asahi.jpg') },
+  { id: '9', name: 'Redhorse', price: 12.99, category: '3', image: require('../assets/redhorse2.jpg') },
+  { id: '10', name: 'Caramel Ice Cream', price: 18.99, category: '4', image: require('../assets/ice-cream.jpg') },
+  { id: '11', name: 'Banana Peanut Butter', price: 24.99, category: '4', image: require('../assets/banana-peanut-butter-smoothie-recipe-5.jpg') },
+  { id: '12', name: 'Caesar Salad', price: 12.99, category: '4', image: require('../assets/Caesar-Salad-9.jpg') },
   // Add more items...
 ];
 
 export default function MenuScreen() {
-  const [activeCategory, setActiveCategory] = useState('1');
+  const [activeCategory, setActiveCategory] = useState('main');
   const [orderItems, setOrderItems] = useState([]);
   const [showOrderPanel, setShowOrderPanel] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [total, setTotal] = useState(0);
+  const [menuData, setMenuData] = useState([]);
+
 
   useEffect(() => {
-    const newTotal = orderItems.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    const newTotal = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2);
     setTotal(newTotal);
-  }, [orderItems]); // This will auto-update when orderItems changes
+    console.log('orderItems: ');
+    console.log(orderItems);
+    if (orderItems.length <= 0) {
+      setShowOrderPanel(false);
+    }
+  }, [orderItems]); 
+
+  useEffect(() => {
+    console.log('MenuData updated:', menuData); 
+  }, [menuData]); 
+
+  const getMenu = () => {
+    fetch('http://10.0.2.2:8000/menu')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        setMenuData(data);
+      })
+      .catch(error => {
+        console.error('Fetch error:', error);
+        setError(error.message);
+      });
+  };
+
+
+  const convertImageUrl = (url) => {
+    let corrected = url.replace('localhost:8000', '10.0.2.2:8000');
+    if (!corrected.startsWith('http')) {
+      corrected = `http://${corrected}`;
+    }
+    console.log(corrected);
+    return corrected;
+  };
+
+  useEffect(() => {
+    const abortController = new AbortController();
+    getMenu();
+    // fetchCsrfToken();
+    return () => {
+      abortController.abort();
+    };
+  }, []); 
 
   const handleAddToOrder = (item) => {
     setOrderItems(prev => {
       const existing = prev.find(i => i.id === item.id);
       if (existing) {
-        return prev.map(i => i.id === item.id ? {...i, qty: i.qty + 1} : i);
+        return prev.map(i => i.id === item.id ? {...i, quantity: i.quantity + 1} : i);
       }
-      return [...prev, {...item, qty: 1}];
+      return [...prev, {...item, quantity: 1}];
     });
+    // console.log(orderItems);
     setShowOrderPanel(true);
   };
 
+  
+  // const api = axios.create({
+  //   baseURL: 'http://10.0.2.2:8000',
+  //   withCredentials: true,
+  //   headers: {
+  //     'Accept': 'application/json',
+  //     'Content-Type': 'application/json'
+  //   }
+  // });
+
+  // const fetchCsrfToken = async () => {
+  //   console.log('[1/4] Getting CSRF token...');
+  //   console.log('API Base URL:', api.defaults.baseURL);
+
+  //   await api.get('/sanctum/csrf-cookie', { timeout: 10000 });
+  //   console.log('CSRF token call completed.');
+  // };
+
+
+  //   const sendDataToLaravel = async () => {
+  //     try {
+  //       // await api.post('api/login', {
+  //       //   email: 'Justbayr@gmail.com',
+  //       //   password: 'Justine@123'
+  //       // });
+  //       const cookies = await CookieManager.get('http://10.0.2.2:8000');
+  //       console.log('Cookies:', cookies);
+    
+  //       // 🔥 Extract XSRF-TOKEN and manually set it
+  //       const xsrfToken = cookies['XSRF-TOKEN']?.value;
+  //       if (xsrfToken) {
+  //         api.defaults.headers.common['X-XSRF-TOKEN'] = decodeURIComponent(xsrfToken);
+  //         console.log('Set X-XSRF-TOKEN header manually:', decodeURIComponent(xsrfToken));
+  //       } else {
+  //         console.warn('XSRF-TOKEN not found in cookies!');
+  //       }
+    
+  //       console.log('[3/4] Sending order data...');
+  //       console.log(orderItems);
+    
+  //       const response = await api.post('/order', {
+  //         order_items: orderItems
+  //       }, { timeout: 20000 });
+    
+  //       console.log('[4/4] Order created:', response.data);
+  //       return response.data;
+    
+  //     } catch (error) {
+  //       console.error('Full error debug:');
+  //       console.log('Message:', error.message);
+  //       if (error.response) {
+  //         console.log('Status:', error.response.status);
+  //         console.log('Data:', error.response.data);
+  //       } else {
+  //         console.log('No response from server');
+  //       }
+  //       throw error;
+  //     }
+  //   };
+    
   const updateQuantity = (itemId, delta) => {
     setOrderItems(prev => prev.map(item => {
       if (item.id === itemId) {
-        const newQty = item.qty + delta;
-        return newQty > 0 ? {...item, qty: newQty} : null;
+        const newquantity = item.quantity + delta;
+        return newquantity > 0 ? {...item, quantity: newquantity} : null;
       }
       return item;
     }).filter(Boolean));
@@ -89,7 +203,12 @@ export default function MenuScreen() {
 
       {/* Left Panel - Enhanced Categories */}
       <View style={styles.leftPanel}>
-        <Text style={styles.panelTitle}>Categories</Text>
+        {/* <img src={'../assets/bruschetta copy.jpg'} alt="Logo" /> */}
+        <Image 
+          source={require('../assets/gardenlogo.png')}
+          style={[styles.headerImage, {width: 150, height: 150}]} // Adjust values as needed
+          resizeMode="contain"
+        />
         <FlatList
           data={categories}
           keyExtractor={(item) => item.id}
@@ -120,16 +239,29 @@ export default function MenuScreen() {
           resizeMode="cover"
         />
         <FlatList
-          data={foodItems.filter(item => item.category === activeCategory)}
+          data={menuData.filter(item => item.category === activeCategory && !item.archived)}
           keyExtractor={(item) => item.id}
           numColumns={3}
           contentContainerStyle={styles.gridContainer}
           renderItem={({ item }) => (
             <View style={styles.foodCard}>
-              <Image source={item.image} style={styles.foodImage} />
+              {/* <Image source={convertImageUrl(item.image_url)} style={styles.foodImage} /> */}
+
+              <Image
+                source={{ 
+                  uri: convertImageUrl(item.image_url),
+                  headers: {
+                    Connection: 'keep-alive',
+                    'Cache-Control': 'no-cache'
+                  }
+                }}
+                style={styles.foodImage}
+                // resizeMode="contain"
+                onError={(e) => console.log('Error loading image:', e.nativeEvent.error)}
+              />
               <View style={styles.foodInfo}>
                 <Text style={styles.foodName}>{item.name}</Text>
-                <Text style={styles.foodPrice}>${item.price.toFixed(2)}</Text>
+                <Text style={styles.foodPrice}>₱{item.price.toFixed(2)}</Text>
               </View>
               <TouchableOpacity 
                 style={styles.addButton}
@@ -145,7 +277,7 @@ export default function MenuScreen() {
       </View>
 
       {/* Right Panel - Premium Order Details */}
-      {showOrderPanel && (
+      {showOrderPanel && orderItems.length > 0 && (
         <View style={styles.orderPanel}>
           <ScrollView contentContainerStyle={styles.orderContent}>
 
@@ -168,7 +300,7 @@ export default function MenuScreen() {
                 {/* Order details */}
                 <View style={styles.orderInfo}>
                   <Text style={styles.orderName}>{item.name}</Text>
-                  <Text style={styles.orderPrice}>${item.price.toFixed(2)}</Text>
+                  <Text style={styles.orderPrice}>₱{item.price.toFixed(2)}</Text>
                   
                   <View style={styles.quantityControls}>
                     <TouchableOpacity 
@@ -178,7 +310,7 @@ export default function MenuScreen() {
                       <Text style={styles.quantityText}>-</Text>
                     </TouchableOpacity>
                     
-                    <Text style={styles.quantityNumber}>{item.qty}</Text>
+                    <Text style={styles.quantityNumber}>{item.quantity}</Text>
                     
                     <TouchableOpacity 
                       style={styles.quantityButton}
@@ -196,7 +328,7 @@ export default function MenuScreen() {
                   >
                     <Icon name="trash-o" size={27} color="#b3071b" />
                   </TouchableOpacity>
-                  <Text style={styles.orderPrice}>${(item.price * item.qty).toFixed(2)}</Text>
+                  <Text style={styles.orderPrice}>₱{(item.price * item.quantity).toFixed(2)}</Text>
                 </View>
               </View>
             ))}
@@ -207,7 +339,7 @@ export default function MenuScreen() {
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Total:</Text>
               <Text style={styles.totalAmount}>
-                ${total}
+                ₱{total}
               </Text>
             </View>
               <View style={styles.buttonContainer}>
@@ -218,7 +350,8 @@ export default function MenuScreen() {
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.checkoutButton}
-                  onPress={() => setShowPayment(true)}
+                  onPress={async () => {setShowPayment(true)
+                  }}
                 >
                   <Text style={styles.checkoutText}>Confirm Order</Text>
                 </TouchableOpacity>
@@ -236,7 +369,7 @@ export default function MenuScreen() {
           onPress={() => setShowOrderPanel(true)}
         >
           <Icon name="shopping-cart" size={30} color="#040f04" />
-          <Text style={styles.cartText}>{orderItems.reduce((sum, item) => sum + item.qty, 0)}</Text>
+          <Text style={styles.cartText}>{orderItems.reduce((sum, item) => sum + item.quantity, 0)}</Text>
         </TouchableOpacity>
       )}
 
@@ -300,6 +433,7 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
     position: 'relative', // Ensure proper stacking
     zIndex: 1,
+    alignSelf: 'center',
   },
   gridContainer: {
     paddingHorizontal: 8,

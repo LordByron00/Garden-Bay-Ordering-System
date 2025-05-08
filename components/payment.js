@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Dimensions, View, Text, Modal, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, StyleSheet, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { createOrder } from '../api/orderService';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
@@ -18,7 +19,21 @@ const PaymentPopup = ({ totalAmount, onClose, visible, orderItems, onPaymentSucc
     { id: 'cash', name: 'Cash', icon: 'money' },
   ];
 
-  const handlePayment = () => {
+
+
+  // In a component
+  const handleOrder = async () => {
+    try {
+      // Then create order
+      const result = await createOrder(orderItems);
+      console.log('Order result:', result);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const handlePayment = async () => {
+
     if (!selectedMethod) {
       setError('Please select a payment method');
       return;
@@ -31,7 +46,9 @@ const PaymentPopup = ({ totalAmount, onClose, visible, orderItems, onPaymentSucc
     setTimeout(() => {
       setIsProcessing(false);
       setShowReceipt(true);
+      handleOrder();
     }, 2500);
+
   };
 
   const handleCloseReceipt = () => {
@@ -60,9 +77,9 @@ const PaymentPopup = ({ totalAmount, onClose, visible, orderItems, onPaymentSucc
       <View style={styles.receiptDivider} />
       
       {orderItems.map((item) => (
-        <View style={styles.receiptRow}>
-        <Text style={styles.receiptLabel}>{item.name}</Text>
-        <Text style={styles.receiptValue}>${item.price.toFixed(2)} {item.qty}x</Text>
+        <View key={item.id} style={styles.receiptRow}>
+          <Text style={styles.receiptLabel}>{item.name}</Text>
+          <Text style={styles.receiptValue}>₱{item.price.toFixed(2)} {item.qty}x</Text>
         </View>
       ))}
       
@@ -70,7 +87,7 @@ const PaymentPopup = ({ totalAmount, onClose, visible, orderItems, onPaymentSucc
 
       <View style={styles.receiptRow}>
         <Text style={styles.receiptLabel}>Total:</Text>
-        <Text style={styles.receiptValue}>${totalAmount}</Text>
+        <Text style={styles.receiptValue}>₱{totalAmount}</Text>
       </View>
       
       <View style={styles.receiptRow}>
@@ -118,7 +135,7 @@ const PaymentPopup = ({ totalAmount, onClose, visible, orderItems, onPaymentSucc
                 </View>
 
                 <ScrollView contentContainerStyle={styles.content}>
-                  <Text style={styles.total}>Total: ${totalAmount}</Text>
+                  <Text style={styles.total}>Total: ₱{totalAmount}</Text>
 
                   <Text style={styles.sectionTitle}>Select Payment Method</Text>
                   {paymentMethods.map((method) => (

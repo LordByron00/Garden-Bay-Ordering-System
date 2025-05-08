@@ -10,8 +10,11 @@
     "test": "jest"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.1.2",
+    "@react-native-cookies/cookies": "^6.2.1",
     "@react-navigation/native-stack": "^7.3.10",
-    "axios": "^1.8.4",
+    "axios": "^1.9.0",
+    "expo-image": "^2.1.6",
     "react": "19.0.0",
     "react-native": "0.79.1",
     "react-native-safe-area-context": "^5.4.0",
@@ -20,9 +23,9 @@
     "react-native-view-shot": "^4.0.3"
   },
   "devDependencies": {
-    "@babel/core": "^7.25.2",
+    "@babel/core": "^7.27.1",
     "@babel/preset-env": "^7.25.3",
-    "@babel/runtime": "^7.25.0",
+    "@babel/runtime": "^7.27.1",
     "@react-native-community/cli": "18.0.0",
     "@react-native-community/cli-platform-android": "18.0.0",
     "@react-native-community/cli-platform-ios": "18.0.0",
