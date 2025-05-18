@@ -221,7 +221,7 @@ export default function MenuScreen() {
               onPress={() => setActiveCategory(item.id)}
             >
               <Text style={styles.categoryIcon}>{item.icon}</Text>
-              <Text style={styles.categoryText}>{item.name}</Text>
+              <Text style={activeCategory === item.id ? styles.activeCategoryText : styles.categoryText}>{item.name}</Text>
             </TouchableOpacity>
           )}
         />
@@ -295,8 +295,21 @@ export default function MenuScreen() {
             
             {orderItems.map((item) => (
               <View key={item.id} style={styles.orderItem}>
-                <Image source={item.image} style={styles.orderImage} />
+                {/* <Image source={convertImageUrl(item.image_url)} style={styles.orderImage} /> */}
                 
+                <Image
+                  source={{ 
+                    uri: convertImageUrl(item.image_url),
+                    headers: {
+                      Connection: 'keep-alive',
+                      'Cache-Control': 'no-cache'
+                    }
+                  }}
+                  style={styles.orderImage}
+                  // resizeMode="contain"
+                  onError={(e) => console.log('Error loading image:', e.nativeEvent.error)}
+                />
+
                 {/* Order details */}
                 <View style={styles.orderInfo}>
                   <Text style={styles.orderName}>{item.name}</Text>
@@ -411,7 +424,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA',
   },
   activeCategory: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#1e3138',
+    color: '#f7f7f7',
+  },
+  activeCategoryText: {
+      fontSize: 24,
+  fontWeight: '600',
+  color: '#f7f7f7',
   },
   categoryIcon: {
     fontSize: 40,
@@ -463,19 +482,19 @@ const styles = StyleSheet.create({
   foodName: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#333',
+    color: '#000',
     marginBottom: 5,
   },
   foodPrice: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#4CAF50',
+    color: '#444',
   },
   addButton: {
     position: 'absolute',
     bottom: 15,
     right: 15,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#1e3138',
     width: 50,
     height: 50,
     borderRadius: 25,
@@ -501,13 +520,14 @@ const styles = StyleSheet.create({
   },
   curOrderHeader: {
     flexDirection: 'row',
-    // backgroundColor: '#7d868c',
+    backgroundColor: '#50636b',
     alignContent: 'center',
+    padding: 18,
   },
   orderTitle: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#2C3E50',
+    color: 'white',
     marginLeft: 160,
     marginBottom: 15,
   },
@@ -537,7 +557,7 @@ const styles = StyleSheet.create({
   },
   orderPrice: {
     fontSize: 20,
-    color: '#4CAF50',
+    color: '#424242',
     marginBottom: 5,
   },
   quantityControls: {
@@ -550,7 +570,7 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   quantityButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#1e3138',
     width: 32,
     height: 32,
     borderRadius: 22.5,
@@ -601,7 +621,7 @@ const styles = StyleSheet.create({
   totalAmount: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#4CAF50',
+    color: '#424242',
   },
   cancelButton: {
     backgroundColor: '#b30b0b',
@@ -611,7 +631,7 @@ const styles = StyleSheet.create({
     width: 220
   },
   checkoutButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#1e3138',
     borderRadius: 15,
     padding: 20,
     alignItems: 'center',
