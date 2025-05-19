@@ -1,10 +1,9 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage'; // You'll need to install this package
-import axios from 'axios'; // You'll need to install axios
+import axios from 'axios';
 
-// Define your Laravel API base URL
-const API_BASE_URL = 'http://localhost:8000'; // Replace with your actual backend URL
+const API_BASE_URL = 'http://localhost:8000';
 
 // Create an Auth Context to manage authentication state and token
 const AuthContext = createContext(null);
@@ -14,9 +13,10 @@ export const useAuth = () => useContext(AuthContext);
 
 // Auth Provider component to wrap your app or relevant parts
 export const AuthProvider = ({ children }) => {
+
   const [authToken, setAuthToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState(null); // Optional: Store user data
+  const [user, setUser] = useState(null); 
 
   // Load the token from storage when the app starts
   useEffect(() => {
@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     loadToken();
-  }, []); // Empty dependency array means this runs once on mount
+  }, []); 
 
   // Function to handle login
   const login = async (email, password) => {
@@ -147,6 +147,8 @@ export const AuthProvider = ({ children }) => {
       throw error; // Re-throw the error for the component to handle
     }
   };
+
+
 
   return (
     <AuthContext.Provider value={{ authToken, user, isLoading, login, logout, authenticatedRequest }}>

@@ -295,8 +295,6 @@ export default function MenuScreen() {
             
             {orderItems.map((item) => (
               <View key={item.id} style={styles.orderItem}>
-                {/* <Image source={convertImageUrl(item.image_url)} style={styles.orderImage} /> */}
-                
                 <Image
                   source={{ 
                     uri: convertImageUrl(item.image_url),
